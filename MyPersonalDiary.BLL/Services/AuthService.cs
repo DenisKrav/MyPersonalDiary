@@ -36,7 +36,7 @@ namespace UrlShortener.BLL.Services
             var user = await _userManager.FindByIdAsync(userId) ?? throw new Exception("User not found");
 
             claims.Add(new Claim(ClaimTypes.Role, userRole));
-            claims.Add(new Claim("NickName", user.NickName ?? "N/A"));
+            claims.Add(new Claim(ClaimTypes.Name, user.NickName ?? "N/A"));
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
             var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

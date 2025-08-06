@@ -15,22 +15,6 @@ namespace MyPersonalDiary.Server.Controllers
             _serviceProvider = serviceProvider;
         }
 
-        [HttpPost("roles")]
-        public async Task<IActionResult> SeedRoles()
-        {
-            using var scope = _serviceProvider.CreateScope();
-            await RoleSeeder.SeedRolesAsync(scope.ServiceProvider);
-            return Ok("Roles seeded.");
-        }
-
-        [HttpPost("admin")]
-        public async Task<IActionResult> SeedAdmin()
-        {
-            using var scope = _serviceProvider.CreateScope();
-            await AdminUserSeeder.SeedAdminAsync(scope.ServiceProvider);
-            return Ok("Admin user seeded.");
-        }
-
         [HttpPost("run")]
         public async Task<IActionResult> SeedAll()
         {

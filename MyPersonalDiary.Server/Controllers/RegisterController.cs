@@ -1,51 +1,45 @@
 ﻿using AutoMapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.RateLimiting;
-using MyPersonalDiary.BLL.DTOs.Auth.Request;
+using MyPersonalDiary.BLL.DTOs.User.Request;
 using MyPersonalDiary.BLL.Exceptions;
 using MyPersonalDiary.BLL.InterfacesServices;
-using MyPersonalDiary.DAL.Models.Identities;
+using MyPersonalDiary.DAL.Enums;
 using MyPersonalDiary.Server.Utilities;
-using MyPersonalDiary.Server.ViewModels.Auth.Request;
+using MyPersonalDiary.Server.ViewModels.User.Request;
 
 namespace MyPersonalDiary.Server.Controllers
 {
-    [Route("api/auth")]
+    [Route("api/register")]
     [ApiController]
-    public class AuthController : ControllerBase
+    public class RegisterController: ControllerBase
     {
+        private readonly IRegisterService _registeredServices;
         private readonly IAuthService _authService;
-        private readonly IUserService _userService;
         private readonly IMapper _mapper;
-        private readonly RoleManager<ApplicationRole> _roleManager;
+        private readonly IUserService _userService;
 
-
-        public AuthController(IUserService userService, IAuthService authService, IMapper mapper, RoleManager<ApplicationRole> roleManager)
+        public RegisterController(IRegisterService registeredServices, IAuthService authService, IMapper mapper, IUserService userService)
         {
+            _registeredServices = registeredServices;
             _authService = authService;
             _mapper = mapper;
             _userService = userService;
-            _roleManager = roleManager;
-
         }
 
-        [HttpPost("login")]
-        [EnableRateLimiting("LoginLimiter")]
-        public async Task<ActionResult<GeneralResultModel>> Login([FromBody] LoginRequestViewModel request)
+        [HttpPost("registerCustomer")]
+        public async Task<ActionResult<GeneralResultModel>> Register([FromBody] NewUserRequestViewModel request)
         {
             GeneralResultModel generalResult = new GeneralResultModel();
-
             try
             {
-                await _authService.LoginAsync(_mapper.Map<LoginRequestDto>(request));
+                // TODO: change logick for defining role
+                request.Role = UserRole.User;
+                var newUser = _mapper.Map<NewUserDTO>(request);
+                await _registeredServices.RegisterUserAsync(newUser);
 
                 var userDto = await _userService.GetUserByEmailAsync(request.Email);
-
                 var token = await _authService.GenerateToken(userDto.Id.ToString(), userDto.Email);
-
                 generalResult.Result = token;
-
                 return Ok(generalResult);
             }
             catch (InvalidLoginPasswordException ex)

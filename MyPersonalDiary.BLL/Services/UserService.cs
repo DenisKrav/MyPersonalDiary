@@ -38,10 +38,6 @@ namespace MyPersonalDiary.BLL.Services
             if (userExist != null)
                 throw new ArgumentException("User with this email already exists.");
 
-            var phoneExist = await _userManager.Users.AnyAsync(u => u.PhoneNumber == newUserDTO.Phone);
-            if (phoneExist)
-                throw new ArgumentException("User with this phone number already exists.");
-
             var user = _mapper.Map<ApplicationUser>(newUserDTO);
             user.UserName = user.Email;
 
