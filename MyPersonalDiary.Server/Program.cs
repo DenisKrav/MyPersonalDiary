@@ -11,6 +11,7 @@ using MyPersonalDiary.DAL.Models.Identities;
 using MyPersonalDiary.Server.DependencyResolve;
 using System;
 using System.Text;
+using System.Threading.RateLimiting;
 
 namespace MyPersonalDiary.Server
 {
@@ -81,6 +82,22 @@ namespace MyPersonalDiary.Server
 
             builder.Services.AutoRegisterDependencies();
 
+            builder.Services.AddRateLimiter(options =>
+            {
+                options.AddPolicy("LoginLimiter", context =>
+                {
+                    var ip = context.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+
+                    return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = 5,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                        QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+                    });
+                });
+            });
+
             var app = builder.Build();
 
             app.UseCors("AllowAnyOrigin");
@@ -96,6 +113,8 @@ namespace MyPersonalDiary.Server
             }
 
             app.UseHttpsRedirection();
+
+            app.UseRateLimiter();
 
             app.UseAuthentication();
             app.UseAuthorization();

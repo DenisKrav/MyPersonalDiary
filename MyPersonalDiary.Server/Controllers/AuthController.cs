@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using MyPersonalDiary.BLL.DTOs.Auth.Request;
 using MyPersonalDiary.BLL.Exceptions;
 using MyPersonalDiary.BLL.InterfacesServices;
@@ -30,6 +31,7 @@ namespace MyPersonalDiary.Server.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("LoginLimiter")]
         public async Task<ActionResult<GeneralResultModel>> Login([FromBody] LoginRequestViewModel request)
         {
             GeneralResultModel generalResult = new GeneralResultModel();

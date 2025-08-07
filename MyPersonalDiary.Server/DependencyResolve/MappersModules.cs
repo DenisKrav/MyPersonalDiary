@@ -1,5 +1,7 @@
 ﻿using Autofac;
 using AutoMapper;
+using MyPersonalDiary.BLL.Mappers;
+using MyPersonalDiary.Server.Mappers;
 using System.Reflection;
 
 namespace MyPersonalDiary.Server.DependencyResolve
@@ -13,7 +15,10 @@ namespace MyPersonalDiary.Server.DependencyResolve
                 var loggerFactory = c.Resolve<ILoggerFactory>();
                 return new MapperConfiguration(cfg =>
                 {
-                    cfg.AddMaps(Assembly.GetExecutingAssembly());
+                    cfg.AddProfile(new UserDTOProfile());
+                    cfg.AddProfile(new UserViewModelProfile());
+
+                    cfg.AddProfile(new AuthViewModelProfile());
                 }, loggerFactory);
             })
             .SingleInstance();

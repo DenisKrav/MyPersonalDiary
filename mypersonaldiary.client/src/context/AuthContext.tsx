@@ -31,7 +31,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const [userEmail, setUserEmail] = useState<string | null>(null);
     const [userId, setUserId] = useState<string | null>(null);
     const [userName, setUserName] = useState<string | null>(null);
-    const [userSurname, setUserSurname] = useState<string | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
 
     useEffect(() => {
@@ -49,7 +48,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     setUserRole(null);
                     setUserId(null);
                     setUserName(null);
-                    setUserSurname(null);
                 } else {
                     setToken(storedToken);
                     setIsAuthenticated(true);
@@ -57,7 +55,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                     setUserRole(decoded["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null);
                     setUserId(decoded.sub || null);
                     setUserName(decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || null);
-                    setUserSurname(decoded.userSurname || null);
                 }
             } catch (error) {
                 console.error('Error while decoding token:', error);
@@ -67,7 +64,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
                 setUserRole(null);
                 setUserId(null);
                 setUserName(null);
-                setUserSurname(null);
             }
         } else {
             setIsAuthenticated(false);
@@ -91,7 +87,6 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             setUserId(decode.sub || null);
             setUserRole(decode["http://schemas.microsoft.com/ws/2008/06/identity/claims/role"] || null);
             setUserName(decode['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name'] || null);
-            setUserSurname(decode.userSurname || null);
         }
         catch (error) {
             console.error('Error during login:', error);
@@ -106,11 +101,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         setUserId(null);
         setUserRole(null);
         setUserName(null);
-        setUserSurname(null);
     };
 
     return (
-        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, userEmail, userRole, userId, userName, userSurname }}>
+        <AuthContext.Provider value={{ isAuthenticated, login, logout, token, userEmail, userRole, userId, userName }}>
             {loading ? <div>Loading...</div> : children}
         </AuthContext.Provider>
     );

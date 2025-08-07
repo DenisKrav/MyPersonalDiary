@@ -144,18 +144,18 @@ namespace MyPersonalDiary.DAL.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<Guid>("RecordId")
-                        .HasColumnType("uniqueidentifier");
-
                     b.Property<long>("Size")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("UploadedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("RecordId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("DiaryImages");
                 });
@@ -173,9 +173,6 @@ namespace MyPersonalDiary.DAL.Migrations
                         .IsRequired()
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
 
                     b.Property<long>("UserId")
                         .HasColumnType("bigint");
@@ -376,17 +373,6 @@ namespace MyPersonalDiary.DAL.Migrations
 
             modelBuilder.Entity("MyPersonalDiary.DAL.Models.DiaryImage", b =>
                 {
-                    b.HasOne("MyPersonalDiary.DAL.Models.DiaryRecord", "Record")
-                        .WithMany("Images")
-                        .HasForeignKey("RecordId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Record");
-                });
-
-            modelBuilder.Entity("MyPersonalDiary.DAL.Models.DiaryRecord", b =>
-                {
                     b.HasOne("MyPersonalDiary.DAL.Models.Identities.ApplicationUser", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -398,7 +384,13 @@ namespace MyPersonalDiary.DAL.Migrations
 
             modelBuilder.Entity("MyPersonalDiary.DAL.Models.DiaryRecord", b =>
                 {
-                    b.Navigation("Images");
+                    b.HasOne("MyPersonalDiary.DAL.Models.Identities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
                 });
 #pragma warning restore 612, 618
         }

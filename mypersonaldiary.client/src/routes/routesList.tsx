@@ -1,5 +1,11 @@
 import AdminPage from "../pages/AdminPage";
+import LogInPage from "../pages/LogInPage";
+import NotesPage from "../pages/NotesPage";
 import NotFoundPage from "../pages/NotFoundPage";
+import RegisterPage from "../pages/RegisterPage";
+import AdminRoute from "./AdminRoute";
+import PrivateRoute from "./PrivateRoute";
+import PublicOnlyRoute from "./PublicOnlyRoute";
 
 export const routesList = [
     {
@@ -7,7 +13,35 @@ export const routesList = [
         element: <NotFoundPage />,
     },
     {
+        path: "/",
+        element: (
+            <PrivateRoute>
+                <NotesPage />
+            </PrivateRoute>
+        ),
+    },
+    {
         path: "/admin",
-        element: <AdminPage />,
+        element: (
+            <AdminRoute>
+                <AdminPage />
+            </AdminRoute>
+        ),
+    },
+    {
+        path: "/login",
+        element: (
+            <PublicOnlyRoute>
+                <LogInPage />
+            </PublicOnlyRoute>
+        ),
+    },
+    {
+        path: "/invite",
+        element: (
+            <PublicOnlyRoute>
+                <RegisterPage />
+            </PublicOnlyRoute>
+        )
     }
 ];
