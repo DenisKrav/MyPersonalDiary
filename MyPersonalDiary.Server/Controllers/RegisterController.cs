@@ -26,7 +26,7 @@ namespace MyPersonalDiary.Server.Controllers
             _userService = userService;
         }
 
-        [HttpPost("registerCustomer")]
+        [HttpPost("RegisterUser")]
         public async Task<ActionResult<GeneralResultModel>> Register([FromBody] NewUserRequestViewModel request)
         {
             GeneralResultModel generalResult = new GeneralResultModel();

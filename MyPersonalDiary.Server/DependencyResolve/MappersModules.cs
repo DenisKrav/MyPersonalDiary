@@ -16,6 +16,7 @@ namespace MyPersonalDiary.Server.DependencyResolve
                 return new MapperConfiguration(cfg =>
                 {
                     cfg.AddProfile(new UserDTOProfile());
+                    cfg.AddProfile(new UserViewModelProfile());
 
                     cfg.AddProfile(new AuthViewModelProfile());
                 }, loggerFactory);

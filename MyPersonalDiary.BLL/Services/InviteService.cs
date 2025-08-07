@@ -73,6 +73,21 @@ namespace MyPersonalDiary.BLL.Services
             return "Invite sent successfully.";
         }
 
+        public async Task<string> ValidateCodeAsync(string code)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+                throw new ArgumentException("Code is required");
+
+            var invite = await _unitOfWork.InviteRepository.GetAsync(i => i.Code == code && !i.IsUsed);
+
+            if (invite == null || !invite.Any())
+                throw new ArgumentException("Invalid or expired invite code.");
+
+            return invite.First().Email;
+        }
+
+
+
         private async Task<bool> SendEmailAsync(string email, string code)
         {
             try

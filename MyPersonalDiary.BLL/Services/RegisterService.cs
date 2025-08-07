@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using MyPersonalDiary.BLL.DTOs.User.Request;
 using MyPersonalDiary.BLL.Exceptions;
 using MyPersonalDiary.BLL.InterfacesServices;
+using MyPersonalDiary.DAL.InterfacesRepositories;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,10 +16,12 @@ namespace MyPersonalDiary.BLL.Services
     public class RegisterService: IRegisterService
     {
         private readonly IUserService _userService;
+        private readonly IUnitOfWork _unitOfWork;
 
-        public RegisterService(IUserService userService) 
+        public RegisterService(IUserService userService, IUnitOfWork unitOfWork) 
         {
             _userService = userService;
+            _unitOfWork = unitOfWork;
         }
 
         public async Task RegisterUserAsync(NewUserDTO newUser)
@@ -31,6 +34,17 @@ namespace MyPersonalDiary.BLL.Services
             }
 
             await _userService.CreateUserAsync(newUser);
+
+            // Make invate used
+            var invites = await _unitOfWork.InviteRepository.GetAsync(i => i.Email == newUser.Email && !i.IsUsed);
+            var invite = invites.FirstOrDefault();
+            if (invite != null)
+            {
+                invite.IsUsed = true;
+                invite.UsedAt = DateTime.UtcNow;
+                await _unitOfWork.InviteRepository.UpdateAsync(invite);
+                await _unitOfWork.SaveAsync();
+            }
         }
     }
 }

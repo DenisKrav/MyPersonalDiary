@@ -13,7 +13,7 @@ const SiteHeader = () => {
 
     const menuItems = [
         { key: '/', label: 'Short URLs' },
-        ...(isAuthenticated ?? userRole === UserRole.Admin
+        ...(isAuthenticated && userRole === UserRole.Admin
             ? [{ key: '/admin', label: 'Admin' }]
             : [])
     ];

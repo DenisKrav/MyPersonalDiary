@@ -1,21 +1,64 @@
-import { Layout, Form, Input, Button, message } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Layout, Form, Input, Button, Spin, Typography } from 'antd';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useAuth } from '../context/AuthContext';
 import { useRegisterUser } from '../api/Queries/Register/useRegisterUser';
 import type { NewUserModel } from '../api/Models/User/NewUserModel';
+import { useEffect, useState } from 'react';
+import { useCheckInviteCode } from '../api/Queries/Invite/useCheckInviteCode';
+import { toast } from 'sonner';
+import ReCAPTCHA from 'react-google-recaptcha';
 
 const { Content } = Layout;
 
 const RegisterPage = () => {
+    const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY;
+    const { Title } = Typography;
+
     const [form] = Form.useForm();
     const navigate = useNavigate();
     const { login } = useAuth();
+    const [searchParams] = useSearchParams();
+
+    const code = searchParams.get("code");
+
+    const [emailFromInvite, setEmailFromInvite] = useState<string | null>(null);
+    const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+
     const { mutateAsync: registerUser, isPending } = useRegisterUser();
-    // const [rememberMe] = useState(true); // або окремий чекбокс, якщо хочеш
+    const { mutateAsync: checkInviteCode, isPending: checkingCode } = useCheckInviteCode();
+
+    useEffect(() => {
+        const validate = async () => {
+            if (!code) {
+                toast.error("Invite is not found");
+                return;
+            }
+
+            try {
+                const resultEmail = await checkInviteCode({ code: code });
+                setEmailFromInvite(resultEmail);
+            } catch (err: any) {
+                toast.error("Invite code is not valid");
+            }
+        };
+
+        validate();
+    }, [code, checkInviteCode]);
+
+    useEffect(() => {
+        if (emailFromInvite) {
+            form.setFieldsValue({ email: emailFromInvite });
+        }
+    }, [emailFromInvite, form]);
 
     const onFinish = async (values: any) => {
+        if (!captchaToken) {
+            toast.error("Please complete the reCAPTCHA");
+            return;
+        }
+
         const newCustomer: NewUserModel = {
             nickname: values.nickname,
             email: values.email,
@@ -24,19 +67,36 @@ const RegisterPage = () => {
 
         try {
             const token = await registerUser(newCustomer);
-            // login(token, rememberMe);
             login(token, false);
-            message.success("Registration successful");
+            toast.success("Registration successful");
             navigate('/');
         } catch (error: any) {
             console.error(error);
-            message.error(error.message || "Registration failed");
+            toast.error(error.message || "Registration failed");
         }
     };
 
     const onFinishFailed = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
     };
+
+    if (checkingCode) {
+        return (
+            <div style={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Spin size="large">
+                    <div style={{ width: "100%", height: "100%" }} />
+                </Spin>
+            </div>
+        );
+    }
+
+    if (!emailFromInvite) {
+        return (
+            <div style={{ textAlign: 'center', marginTop: '100px' }}>
+                <Title level={3}>Invite is not valid</Title>
+            </div>
+        );
+    }
 
     return (
         <Layout style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -60,14 +120,8 @@ const RegisterPage = () => {
                             <Input placeholder="Input nickname" />
                         </Form.Item>
 
-                        <Form.Item
-                            name="email"
-                            rules={[
-                                { required: true, message: "Email is required" },
-                                { type: 'email', message: "Invalid email" },
-                              ]}
-                        >
-                            <Input placeholder="Input email" />
+                        <Form.Item name="email">
+                            <Input disabled readOnly />
                         </Form.Item>
 
                         <Form.Item
@@ -108,6 +162,18 @@ const RegisterPage = () => {
                         >
                             <Input.Password placeholder="Input confirm password" />
                         </Form.Item>
+
+                        <Form.Item
+                            shouldUpdate
+                            style={{ textAlign: 'center' }}
+                        >
+                            <ReCAPTCHA
+                                sitekey={RECAPTCHA_SITE_KEY}
+                                onChange={(token: any) => setCaptchaToken(token)}
+                                onExpired={() => setCaptchaToken(null)}
+                            />
+                        </Form.Item>
+
 
                         <Form.Item>
                             <Button type="primary" htmlType="submit" loading={isPending} style={{ width: '100%' }}>
