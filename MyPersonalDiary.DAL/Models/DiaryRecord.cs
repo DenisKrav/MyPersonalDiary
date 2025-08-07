@@ -23,9 +23,5 @@ namespace MyPersonalDiary.DAL.Models
         public string EncryptedContent { get; set; }
 
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-
-        public bool IsDeleted { get; set; } = false;
-
-        public ICollection<DiaryImage> Images { get; set; }
     }
 }

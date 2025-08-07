@@ -1,6 +1,6 @@
 import AdminPage from "../pages/AdminPage";
 import LogInPage from "../pages/LogInPage";
-import MainPage from "../pages/MainPage";
+import NotesPage from "../pages/NotesPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import RegisterPage from "../pages/RegisterPage";
 import AdminRoute from "./AdminRoute";
@@ -16,7 +16,7 @@ export const routesList = [
         path: "/",
         element: (
             <PrivateRoute>
-                <MainPage />
+                <NotesPage />
             </PrivateRoute>
         ),
     },

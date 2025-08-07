@@ -1,4 +1,5 @@
-﻿using System;
+﻿using MyPersonalDiary.DAL.Models.Identities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -12,11 +13,10 @@ namespace MyPersonalDiary.DAL.Models
         [Key]
         public Guid Id { get; set; }
 
-        [Required]
-        public Guid RecordId { get; set; }
+        public long UserId { get; set; }
 
         [Required]
-        public DiaryRecord Record { get; set; }
+        public ApplicationUser User { get; set; }
 
         [Required]
         [MaxLength(255)]

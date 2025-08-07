@@ -12,7 +12,7 @@ const SiteHeader = () => {
     const { isAuthenticated, userRole, logout } = useAuth();
 
     const menuItems = [
-        { key: '/', label: 'Short URLs' },
+        { key: '/', label: 'Notes' },
         ...(isAuthenticated && userRole === UserRole.Admin
             ? [{ key: '/admin', label: 'Admin' }]
             : [])

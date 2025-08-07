@@ -48,10 +48,10 @@ namespace MyPersonalDiary.DAL.ApplicationDbContext
                 entity.Property(x => x.Data)
                       .IsRequired();
 
-                entity.HasOne(x => x.Record)
-                      .WithMany(r => r.Images)
-                      .HasForeignKey(x => x.RecordId)
-                      .OnDelete(DeleteBehavior.Cascade);
+                entity.HasOne(x => x.User)
+                  .WithMany()
+                  .HasForeignKey(x => x.UserId)
+                  .OnDelete(DeleteBehavior.Cascade);
             });
 
             builder.Entity<Invite>(entity =>
