@@ -19,6 +19,8 @@ namespace MyPersonalDiary.Server.DependencyResolve
                     cfg.AddProfile(new UserViewModelProfile());
 
                     cfg.AddProfile(new AuthViewModelProfile());
+
+                    cfg.AddProfile(new NoteViewModelProfile());
                 }, loggerFactory);
             })
             .SingleInstance();
