@@ -98,6 +98,8 @@ namespace MyPersonalDiary.Server
                 });
             });
 
+            builder.Services.AddDataProtection();
+
             var app = builder.Build();
 
             app.UseCors("AllowAnyOrigin");

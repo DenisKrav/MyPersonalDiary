@@ -10,9 +10,17 @@ namespace MyPersonalDiary.Server.DependencyResolve
     {
         protected override void Load(ContainerBuilder builder)
         {
-            builder.Register(c =>
+            builder.RegisterType<DecryptDiaryRecordContentResolver>()
+                   .AsSelf()
+                   .InstancePerDependency();
+
+            builder.RegisterType<DecryptDiaryImageDataResolver>()
+                   .AsSelf()
+                   .InstancePerDependency();
+
+            builder.Register(ctx =>
             {
-                var loggerFactory = c.Resolve<ILoggerFactory>();
+                var loggerFactory = ctx.Resolve<ILoggerFactory>();
                 return new MapperConfiguration(cfg =>
                 {
                     cfg.AddProfile(new UserDTOProfile());
@@ -21,13 +29,17 @@ namespace MyPersonalDiary.Server.DependencyResolve
                     cfg.AddProfile(new AuthViewModelProfile());
 
                     cfg.AddProfile(new NoteViewModelProfile());
+                    cfg.AddProfile(new NoteDTOProfile());
                 }, loggerFactory);
             })
             .SingleInstance();
 
-            builder.Register(c =>
-                c.Resolve<MapperConfiguration>()
-                 .CreateMapper(c.Resolve))
+            builder.Register(ctx =>
+            {
+                var scope = ctx.Resolve<ILifetimeScope>();
+                var config = ctx.Resolve<MapperConfiguration>();
+                return config.CreateMapper(scope.Resolve);
+            })
             .As<IMapper>()
             .InstancePerLifetimeScope();
         }

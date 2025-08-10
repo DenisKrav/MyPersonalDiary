@@ -2,6 +2,7 @@
 using MyPersonalDiary.BLL.DTOs.Note.Request;
 using MyPersonalDiary.BLL.DTOs.User.Request;
 using MyPersonalDiary.Server.ViewModels.Diary.Request;
+using MyPersonalDiary.Server.ViewModels.Note.Request;
 using MyPersonalDiary.Server.ViewModels.User.Request;
 
 namespace MyPersonalDiary.Server.Mappers
@@ -10,7 +11,8 @@ namespace MyPersonalDiary.Server.Mappers
     {
         public NoteViewModelProfile()
         {
-            CreateMap<AddNoteRequestViewModel, AddNoteRequestDto>()
+            CreateMap<AddNoteRequestViewModel, AddNoteRequestDto>();
+            CreateMap<DeleteNoteRequestViewModel, DeleteNoteRequestDto>();
         }
     }
 }

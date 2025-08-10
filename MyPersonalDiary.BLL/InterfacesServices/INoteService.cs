@@ -11,5 +11,7 @@ namespace MyPersonalDiary.BLL.InterfacesServices
     public interface INoteService
     {
         Task<NoteResponseDto> AddNoteAsync(AddNoteRequestDto addNote);
+        Task<IEnumerable<NoteResponseDto>> GetUserNotesAsync(long userId);
+        Task<Guid> DeleteNoteAsync(DeleteNoteRequestDto deleterequest);
     }
 }

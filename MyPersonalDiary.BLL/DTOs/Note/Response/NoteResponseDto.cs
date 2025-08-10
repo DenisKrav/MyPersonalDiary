@@ -13,6 +13,7 @@ namespace MyPersonalDiary.BLL.DTOs.Note.Response
         public string? Content { get; set; }
         public string? ImageContentType { get; set; }
         public long? ImageSize { get; set; }
+        public byte[]? ImageData { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 }

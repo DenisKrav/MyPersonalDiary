@@ -1,9 +1,13 @@
 ﻿using AutoDependencyRegistration.Attributes;
 using AutoMapper;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.Extensions.Configuration;
 using MyPersonalDiary.BLL.DTOs.Note.Request;
 using MyPersonalDiary.BLL.DTOs.Note.Response;
+using MyPersonalDiary.BLL.Exceptions;
 using MyPersonalDiary.BLL.InterfacesServices;
+using MyPersonalDiary.DAL.Enums;
 using MyPersonalDiary.DAL.InterfacesRepositories;
 using MyPersonalDiary.DAL.Models;
 using SixLabors.ImageSharp;
@@ -23,21 +27,34 @@ namespace MyPersonalDiary.BLL.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IMapper _mapper;
+        private readonly IDataProtector _protector;
+        private readonly IConfiguration _config;
 
-        //private const int TenMb = 10 * 1024 * 1024;
-
-        public NoteService(IUnitOfWork unitOfWork, IMapper mapper) 
+        public NoteService(IUnitOfWork unitOfWork, IMapper mapper, IDataProtectionProvider dataProtectionProvider, IConfiguration config) 
         {
             _unitOfWork = unitOfWork;
             _mapper = mapper;
+            _config = config;
+            _protector = dataProtectionProvider.CreateProtector(_config["Protector:ContentProtector"]);
+        }
+
+        public async Task<IEnumerable<NoteResponseDto>> GetUserNotesAsync(long userId)
+        {
+            var diaryRecords = await _unitOfWork.DiaryRecordRepository.GetAsync(n => n.UserId == userId);
+            var diaryImages = await _unitOfWork.DiaryImageRepository.GetAsync(n => n.UserId == userId);
+
+            var notes = diaryRecords
+                .Select(r => _mapper.Map<NoteResponseDto>(r))
+                .Concat(diaryImages.Select(i => _mapper.Map<NoteResponseDto>(i)))
+                .OrderByDescending(n => n.CreatedAt);
+
+            return notes;
         }
 
         public async Task<NoteResponseDto> AddNoteAsync(AddNoteRequestDto addNote)
         {
             if (addNote == null)
                 throw new ArgumentNullException(nameof(addNote));
-
-            var noteResponseDto = new NoteResponseDto();
 
             if (!string.IsNullOrWhiteSpace(addNote.Content))
             {
@@ -48,7 +65,7 @@ namespace MyPersonalDiary.BLL.Services
                 {
                     Id = Guid.NewGuid(),
                     UserId = addNote.UserId,
-                    EncryptedContent = addNote.Content,
+                    EncryptedContent = _protector.Protect(addNote.Content),
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -59,16 +76,7 @@ namespace MyPersonalDiary.BLL.Services
             }
             else if (addNote.ImageData != null && addNote.ImageData.Length > 0)
             {
-                //byte[] finalImageData = addNote.ImageData;
-                //string finalContentType = addNote.ImageContentType ?? "application/octet-stream";
-
-                //if (finalImageData.Length > TenMb)
-                //{
-                //    (finalImageData, finalContentType) = await OptimizeImageAsync(
-                //        finalImageData,
-                //        finalContentType
-                //    );
-                //}
+                var encryptedImage = _protector.Protect(addNote.ImageData);
 
                 var diaryImage = new DiaryImage
                 {
@@ -76,10 +84,8 @@ namespace MyPersonalDiary.BLL.Services
                     UserId = addNote.UserId,
                     FileName = $"note_{Guid.NewGuid()}",
                     ContentType = addNote.ImageContentType ?? "application/octet-stream",
-                    //Size = finalImageData.Length,
-                    //Data = finalImageData,
                     Size = addNote.ImageData.Length,
-                    Data = addNote.ImageData,
+                    Data = encryptedImage,
                     UploadedAt = DateTime.UtcNow
                 };
 
@@ -94,29 +100,56 @@ namespace MyPersonalDiary.BLL.Services
             }
         }
 
-        //private async Task<(byte[] data, string contentType)> OptimizeImageAsync(byte[] input, string? originalContentType)
-        //{
-        //    using var msInput = new MemoryStream(input);
+        public async Task<Guid> DeleteNoteAsync(DeleteNoteRequestDto deleteRequest)
+        {
+            if (deleteRequest == null)
+                throw new ArgumentNullException(nameof(deleteRequest));
 
-        //    // Завантажуємо без DecoderOptions — працює у будь-якій версії
-        //    using var image = Image.Load(msInput, out IImageFormat _);
+            if (deleteRequest.NoteId == Guid.Empty)
+                throw new ArgumentException("Note ID cannot be empty.", nameof(deleteRequest.NoteId));
 
-        //    if (image.Width > 1920 || image.Height > 1080)
-        //    {
-        //        image.Mutate(x => x.Resize(new ResizeOptions
-        //        {
-        //            Mode = ResizeMode.Max,
-        //            Size = new Size(1920, 1080)
-        //        }));
-        //    }
+            if (string.IsNullOrWhiteSpace(deleteRequest.NoteType))
+                throw new ArgumentException("Note type cannot be empty.", nameof(deleteRequest.NoteType));
 
-        //    using var msOutput = new MemoryStream();
-        //    var encoder = new WebpEncoder { Quality = 75 };
-        //    await image.SaveAsync(msOutput, encoder);
+            if (!Enum.TryParse<NoteType>(deleteRequest.NoteType, ignoreCase: true, out var noteType))
+                throw new ArgumentException("Invalid note type.", nameof(deleteRequest.NoteType));
 
-        //    return (msOutput.ToArray(), "image/webp");
-        //}
+            var cutoff = DateTime.UtcNow.AddDays(-2);
 
+            switch (noteType)
+            {
+                case NoteType.Text:
+                    {
+                        var note = await _unitOfWork.DiaryRecordRepository.GetByIDAsync(deleteRequest.NoteId);
+                        if (note is null)
+                            throw new ArgumentException("Note not found.", nameof(deleteRequest.NoteId));
 
+                        if (note.CreatedAt < cutoff)
+                            throw new OldNoteDeleteException("You cannot delete a note older than 2 days.");
+
+                        await _unitOfWork.DiaryRecordRepository.DeleteAsync(note);
+                        break;
+                    }
+
+                case NoteType.Image:
+                    {
+                        var image = await _unitOfWork.DiaryImageRepository.GetByIDAsync(deleteRequest.NoteId);
+                        if (image is null)
+                            throw new ArgumentException("Image note not found.", nameof(deleteRequest.NoteId));
+
+                        if (image.UploadedAt < cutoff)
+                            throw new OldNoteDeleteException("You cannot delete a note older than 2 days.");
+
+                        await _unitOfWork.DiaryImageRepository.DeleteAsync(image);
+                        break;
+                    }
+
+                default:
+                    throw new ArgumentException("Invalid note type.", nameof(deleteRequest.NoteType));
+            }
+
+            await _unitOfWork.SaveAsync();
+            return deleteRequest.NoteId;
+        }
     }
 }
