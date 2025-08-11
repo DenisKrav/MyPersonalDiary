@@ -239,7 +239,7 @@ const NotesPage = () => {
                                 dataSource={filteredRows}
                                 columns={columns}
                                 rowKey="id"
-                                pagination={{ pageSize: 10 }}
+                                pagination={{ pageSize: 5 }}
                                 bordered
                             />
 

@@ -103,6 +103,8 @@ namespace MyPersonalDiary.Server
 
             builder.Services.AddHostedService<UserDeletionWorker>();
 
+            builder.Services.AddMemoryCache();
+
             var app = builder.Build();
 
             app.UseCors("AllowAnyOrigin");
