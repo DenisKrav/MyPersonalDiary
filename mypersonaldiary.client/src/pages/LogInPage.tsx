@@ -1,10 +1,11 @@
 import { Layout, Form, Input, Button, Checkbox } from 'antd';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import SiteFooter from '../components/SiteFooter';
 import SiteHeader from '../components/SiteHeader';
 import { useAuth } from '../context/AuthContext';
 import type { LoginModel } from '../api/Models/Login/LoginModel';
 import { useLoginUser } from '../api/Queries/Login/useLoginUser';
+import { toast } from 'sonner';
 
 const { Content } = Layout;
 
@@ -24,13 +25,16 @@ const LogInPage = () => {
             const token = await loginUser(loginModel);
             login(token, values.remember);
             navigate('/');
+            toast.success('Login successful');
         } catch (error: any) {
             console.error(error);
+            toast.error(error.message || 'Login failed');
         }
     };
 
     const onFinishFailed = (errorInfo: any) => {
         console.log('Failed:', errorInfo);
+        toast.error('Please fill in all required fields correctly');
     };
 
     return (
@@ -76,6 +80,10 @@ const LogInPage = () => {
                             </Button>
                         </Form.Item>
                     </Form>
+
+                    <div style={{ textAlign: 'center', marginTop: '10px' }}>
+                        <Link to="/restore-account">Restore account</Link>
+                    </div>
                 </div>
             </Content>
 

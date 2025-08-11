@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using MyPersonalDiary.DAL.ApplicationDbContext;
 using MyPersonalDiary.DAL.Models.Identities;
+using MyPersonalDiary.Server.BackgroundServices;
 using MyPersonalDiary.Server.DependencyResolve;
 using System;
 using System.Text;
@@ -99,6 +100,8 @@ namespace MyPersonalDiary.Server
             });
 
             builder.Services.AddDataProtection();
+
+            builder.Services.AddHostedService<UserDeletionWorker>();
 
             var app = builder.Build();
 

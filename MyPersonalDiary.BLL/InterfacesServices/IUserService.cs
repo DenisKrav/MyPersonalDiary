@@ -10,6 +10,12 @@ namespace MyPersonalDiary.BLL.InterfacesServices
 
         Task<IdentityResult> DeleteUserAsync(long userId);
 
+        Task<IdentityResult> DeleteSoftUserAsync(long userId);
+
+        Task<int> PurgeSoftDeletedUsersAsync(TimeSpan olderThan);
+
+        Task<IdentityResult> RestoreSoftDeletedUserAsync(string userEmail);
+
         Task<IdentityResult> UpdateUserAsync(UpdateUserDTO updateUserDTO);
 
         Task<UserDTO?> GetUserByIdAsync(long userId);

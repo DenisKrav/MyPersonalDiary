@@ -3,6 +3,7 @@ import LogInPage from "../pages/LogInPage";
 import NotesPage from "../pages/NotesPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import RegisterPage from "../pages/RegisterPage";
+import RestoreAccountPage from "../pages/RestoreAccountPage";
 import AdminRoute from "./AdminRoute";
 import PrivateRoute from "./PrivateRoute";
 import PublicOnlyRoute from "./PublicOnlyRoute";
@@ -41,6 +42,14 @@ export const routesList = [
         element: (
             <PublicOnlyRoute>
                 <RegisterPage />
+            </PublicOnlyRoute>
+        )
+    },
+    {
+        path: "/restore-account",
+        element: (
+            <PublicOnlyRoute>
+                <RestoreAccountPage />
             </PublicOnlyRoute>
         )
     }

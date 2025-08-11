@@ -17,11 +17,12 @@ using System.Threading.Tasks;
 namespace UrlShortener.BLL.Services
 {
     [RegisterClassAsTransient]
-    public class AuthService(IConfiguration configuration, IUserService userService, UserManager<ApplicationUser> userManager) : IAuthService
+    public class AuthService(IConfiguration configuration, IUserService userService, UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager) : IAuthService
     {
         private readonly IConfiguration _configuration = configuration;
         private readonly IUserService _userService = userService;
         private readonly UserManager<ApplicationUser> _userManager = userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager = signInManager;
 
         public async Task<string> GenerateToken(string userId, string userEmail)
         {
@@ -56,10 +57,28 @@ namespace UrlShortener.BLL.Services
             var user = await _userManager.FindByEmailAsync(loginRequest.Email)
                 ?? throw new InvalidLoginEmailException("User by email not founded!");
 
-            if (!await _userManager.CheckPasswordAsync(user, loginRequest.Password))
-                throw new InvalidLoginPasswordException("Invalid password!");
+            //if (!await _userManager.CheckPasswordAsync(user, loginRequest.Password))
+            //    throw new InvalidLoginPasswordException("Invalid password!");
 
-            return true;
+            // return true;
+
+            var result = await _signInManager.CheckPasswordSignInAsync(user, loginRequest.Password, lockoutOnFailure: true);
+
+            if (result.Succeeded)
+            {
+                return result.Succeeded;
+            }
+
+            if (result.IsLockedOut)
+                throw new UserArgumentException("Account is locked.");
+
+            if (result.IsNotAllowed)
+                throw new UserArgumentException("Login not allowed for this account.");
+
+            if (result.RequiresTwoFactor)
+                throw new UserArgumentException("Two-factor authentication is required.");
+
+            throw new InvalidLoginPasswordException("Invalid credentials.");
         }
     }
 }

@@ -2,6 +2,7 @@
 using AutoMapper;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MyPersonalDiary.BLL.DTOs.User.Request;
 using MyPersonalDiary.BLL.DTOs.User.Response;
 using MyPersonalDiary.BLL.Exceptions;
@@ -16,17 +17,23 @@ using System.Threading.Tasks;
 namespace MyPersonalDiary.BLL.Services
 {
     [RegisterClassAsTransient]
-    public class UserService: IUserService
+    public class UserService : IUserService
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RoleManager<ApplicationRole> _roleManager;
         private readonly IMapper _mapper;
+        private readonly ILogger<UserService> _logger;
 
-        public UserService(UserManager<ApplicationUser> userManager, RoleManager<ApplicationRole> roleManager, IMapper mapper)
+        public UserService(
+            UserManager<ApplicationUser> userManager, 
+            RoleManager<ApplicationRole> roleManager, 
+            IMapper mapper, 
+            ILogger<UserService> logger)
         {
             _userManager = userManager;
             _roleManager = roleManager;
             _mapper = mapper;
+            _logger = logger;
         }
 
         public async Task<(IdentityResult, long)> CreateUserAsync(NewUserDTO newUserDTO)
@@ -58,6 +65,69 @@ namespace MyPersonalDiary.BLL.Services
                 throw new ArgumentException("User not found");
 
             return await _userManager.DeleteAsync(user);
+        }
+
+        public async Task<IdentityResult> DeleteSoftUserAsync(long userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId.ToString());
+            if (user == null)
+                throw new ArgumentException("User not found");
+
+            user.IsPendingDeletion = true;
+            user.DeletionRequestedAt = DateTime.UtcNow;
+
+            user.LockoutEnabled = true;
+            user.LockoutEnd = DateTimeOffset.MaxValue;
+
+            return await _userManager.UpdateAsync(user);
+        }
+
+        public async Task<int> PurgeSoftDeletedUsersAsync(TimeSpan olderThan)
+        {
+            var cutoff = DateTime.UtcNow - olderThan;
+
+            var usersToDelete = await _userManager.Users
+                .Where(u => u.IsPendingDeletion && u.DeletionRequestedAt != null && u.DeletionRequestedAt <= cutoff)
+                .ToListAsync();
+
+            var deleted = 0;
+
+            foreach (var user in usersToDelete)
+            {
+                var result = await _userManager.DeleteAsync(user);
+                if (result.Succeeded)
+                {
+                    deleted++;
+                    _logger.LogInformation("Permanently deleted user {Email}", user.Email);
+                }
+                else
+                {
+                    _logger.LogWarning("Failed to delete user {Email}: {Errors}",
+                        user.Email, string.Join(", ", result.Errors.Select(e => e.Description)));
+                }
+            }
+
+            return deleted;
+        }
+
+        public async Task<IdentityResult> RestoreSoftDeletedUserAsync(string userEmail)
+        {
+            var user = await _userManager.FindByEmailAsync(userEmail);
+            if (user == null)
+                throw new ArgumentException("User not found");
+
+            if (!user.IsPendingDeletion && user.LockoutEnabled && user.DeletionRequestedAt == null && user.LockoutEnd == null)
+            {
+                throw new UserExistExeption("User is not pending deletion or already restored.");
+            }
+
+            user.IsPendingDeletion = false;
+            user.DeletionRequestedAt = null;
+
+            user.LockoutEnabled = false;
+            user.LockoutEnd = null;
+
+            return await _userManager.UpdateAsync(user);
         }
 
         public async Task<IdentityResult> UpdateUserAsync(UpdateUserDTO updateUserDTO)
