@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.14.36203.30 d17.14
+VisualStudioVersion = 17.14.36203.30
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{54A90642-561A-4BB1-A94E-469ADEE60C69}") = "mypersonaldiary.client", "mypersonaldiary.client\mypersonaldiary.client.esproj", "{15312A2B-CE79-4530-CB23-16642F5BD9CB}"
 EndProject
@@ -17,6 +17,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPersonalDiary.BLL", "MyPe
 	ProjectSection(ProjectDependencies) = postProject
 		{8B7A885D-22D4-4C4B-980E-F5801BF40F70} = {8B7A885D-22D4-4C4B-980E-F5801BF40F70}
 	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MyPersonalDiaryNoteServise.Test", "MyPersonalDiaryNoteServise.Test\MyPersonalDiaryNoteServise.Test.csproj", "{A01859E2-13B4-47A7-B032-4899C69A17AA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -42,9 +46,16 @@ Global
 		{692A1128-B466-42E1-A424-151E624D9514}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{692A1128-B466-42E1-A424-151E624D9514}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{692A1128-B466-42E1-A424-151E624D9514}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A01859E2-13B4-47A7-B032-4899C69A17AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A01859E2-13B4-47A7-B032-4899C69A17AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A01859E2-13B4-47A7-B032-4899C69A17AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A01859E2-13B4-47A7-B032-4899C69A17AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A01859E2-13B4-47A7-B032-4899C69A17AA} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2D5AAF73-FDFC-497B-A872-A44CF6685303}
